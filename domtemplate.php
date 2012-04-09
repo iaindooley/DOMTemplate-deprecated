@@ -15,7 +15,7 @@ class DOMTemplate extends DOMTemplateNode {
 	public function __construct ($filepath) {
 		//load the template file to work with. this must be valid XML (but not XHTML)
 		$this->DOMDocument = new DOMDocument ();
-		$this->DOMDocument->loadXML (
+		$this->DOMDocument->loadHTML (
 			//replace HTML entities (e.g. "&copy;") with real unicode characters to prevent invalid XML
 			self::html_entity_decode (file_get_contents ($filepath)), LIBXML_COMPACT | LIBXML_NONET
 		) or trigger_error (
