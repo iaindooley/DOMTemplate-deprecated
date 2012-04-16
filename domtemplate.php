@@ -15,9 +15,9 @@ class DOMTemplate extends DOMTemplateNode {
 	public function __construct ($filepath) {
 		//load the template file to work with. this must be valid XML (but not XHTML)
 		$this->DOMDocument = new DOMDocument ();
-		$this->DOMDocument->loadHTML (
+		$this->DOMDocument->loadXML (
 			//replace HTML entities (e.g. "&copy;") with real unicode characters to prevent invalid XML
-			self::html_entity_decode (file_get_contents ($filepath)), LIBXML_COMPACT | LIBXML_NONET
+			self::html_entity_decode (file_get_contents ($filepath))
 		) or trigger_error (
 			"Template '$filepath' is invalid XML", E_USER_ERROR
 		);
@@ -32,9 +32,9 @@ class DOMTemplate extends DOMTemplateNode {
 		return preg_replace (array (
 			'/^<\?xml.*?>\n/',				//1: remove XML prolog
 			'/<(.*?[^ ])\/>/s',				//2: add space to self-closing
-			'/<(div|[ou]l|textarea)(.*?) ?\/>/'		//3: fix broken self-closed tags
+			'/<(div|[ou]l|textarea|script)(.*?) ?\/>/',		//3: fix broken self-closed tags
 		), array (
-			'', '<$1 />', '<$1$2></$1>'
+			'', '<$1 />', '<$1$2></$1>',
 		), $this->DOMDocument->saveXML ());
 	}
 }
@@ -171,11 +171,16 @@ class DOMTemplateNode {
 	
 	//set the text content on the results of a single xpath query
 	public function setValue ($query, $value) {
-		foreach ($this->query ($query) as $node) $node->nodeValue = $node->nodeType == XML_ATTRIBUTE_NODE
-			? htmlspecialchars ($value, ENT_QUOTES) : htmlspecialchars ($value, ENT_NOQUOTES)
-		; return $this;
+		$nodes = $this->query($query);
+
+		foreach ($nodes as $node)
+		{
+			$node->nodeValue = $node->nodeType == XML_ATTRIBUTE_NODE
+				? htmlspecialchars ($value, ENT_QUOTES) : htmlspecialchars ($value, ENT_NOQUOTES)
+			;
+		} return $this;
 	}
-	
+
 	//set HTML content for a single xpath query
 	public function setHTML ($query, $html) {
 		foreach ($this->query ($query) as $node) {
